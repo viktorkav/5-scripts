@@ -77,6 +77,7 @@ Write-Host "$Target" -NoNewline -ForegroundColor White
 Write-Host "..."
 
 $Moved = 0
+$Failed = 0
 $Counts = @{}
 
 $Files = Get-ChildItem -Path $Target -File -ErrorAction SilentlyContinue |
@@ -115,36 +116,57 @@ foreach ($file in $Files) {
         } while (Test-Path -Path $destFile)
     }
 
-    Move-Item -Path $file.FullName -Destination $destFile -Force
-    Write-Host "  " -NoNewline
-    Write-Host ([char]0x2192) -NoNewline -ForegroundColor DarkGray
-    Write-Host " $($file.Name) " -NoNewline
-    Write-Host ([char]0x2192) -NoNewline -ForegroundColor DarkGray
-    Write-Host " ${category}/" -ForegroundColor Cyan
+    # Usar prefixo \\?\ para suportar caminhos longos (>260 chars) no Windows
+    $srcLong = if ($file.FullName.Length -gt 240) { "\\?\$($file.FullName)" } else { $file.FullName }
+    $dstLong = if ($destFile.Length -gt 240) { "\\?\$destFile" } else { $destFile }
 
-    if ($Counts.ContainsKey($category)) {
-        $Counts[$category]++
+    try {
+        Move-Item -LiteralPath $srcLong -Destination $dstLong -Force -ErrorAction Stop
+        Write-Host "  " -NoNewline
+        Write-Host ([char]0x2192) -NoNewline -ForegroundColor DarkGray
+        Write-Host " $($file.Name) " -NoNewline
+        Write-Host ([char]0x2192) -NoNewline -ForegroundColor DarkGray
+        Write-Host " ${category}/" -ForegroundColor Cyan
+
+        if ($Counts.ContainsKey($category)) {
+            $Counts[$category]++
+        }
+        else {
+            $Counts[$category] = 1
+        }
+        $Moved++
     }
-    else {
-        $Counts[$category] = 1
+    catch {
+        $Failed++
+        Write-Host "  " -NoNewline
+        Write-Host "x" -NoNewline -ForegroundColor Red
+        Write-Host " $($file.Name) " -NoNewline
+        Write-Host "-- $($_.Exception.Message)" -ForegroundColor DarkGray
     }
-    $Moved++
 }
 
 Write-Host ""
 
-if ($Moved -eq 0) {
+if ($Moved -eq 0 -and $Failed -eq 0) {
     Write-Host "  Nenhum arquivo pra organizar." -ForegroundColor DarkGray
 }
 else {
-    Write-Host "  $Moved arquivos organizados:" -ForegroundColor Green
+    if ($Moved -gt 0) {
+        Write-Host "  $Moved arquivos organizados:" -ForegroundColor Green
 
-    Write-Host ""
-    foreach ($entry in $Counts.GetEnumerator() | Sort-Object -Property Value -Descending) {
-        $label = "$($entry.Key):".PadRight(16)
-        Write-Host "  ${label}" -NoNewline
-        Write-Host "$($entry.Value)" -NoNewline -ForegroundColor White
-        Write-Host " arquivos"
+        Write-Host ""
+        foreach ($entry in $Counts.GetEnumerator() | Sort-Object -Property Value -Descending) {
+            $label = "$($entry.Key):".PadRight(16)
+            Write-Host "  ${label}" -NoNewline
+            Write-Host "$($entry.Value)" -NoNewline -ForegroundColor White
+            Write-Host " arquivos"
+        }
+    }
+
+    if ($Failed -gt 0) {
+        Write-Host ""
+        Write-Host "  $Failed arquivos nao puderam ser movidos." -ForegroundColor Yellow
+        Write-Host "  (nome muito longo ou sem permissao)" -ForegroundColor DarkGray
     }
 }
 

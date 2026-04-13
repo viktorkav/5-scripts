@@ -12,7 +12,45 @@ Cinco scripts de produtividade para o terminal — organização de arquivos, li
 | **scanner-wifi** | Escaneia redes Wi-Fi próximas e recomenda o melhor canal |
 | **setup-workspace** | Posiciona janelas em múltiplos monitores com perfis salvos |
 
+> **Qual versao eu uso?**
+>
+> | Seu sistema | Pasta dos scripts |
+> |-------------|-------------------|
+> | **Windows** | `windows/` — use os arquivos `.bat` (clique duplo) |
+> | **macOS**   | Raiz do projeto — arquivos `.sh` |
+> | **Linux**   | `linux/` — arquivos `.sh` |
+>
+> Se voce esta no **Windows**, use apenas os arquivos da pasta `windows/`.
+> Os arquivos `.sh` da raiz sao para macOS e **nao funcionam no Windows**.
+
 ## Instalacao
+
+### Windows
+
+**Opcao 1 — Baixar ZIP (mais facil)**
+
+1. Clique no botao verde **Code** no topo desta pagina
+2. Clique em **Download ZIP**
+3. Extraia o ZIP em qualquer lugar (ex: sua area de trabalho)
+4. Abra a pasta `windows`
+5. Clique duas vezes no script `.bat` que quiser usar
+
+**Opcao 2 — Via terminal (PowerShell)**
+
+```powershell
+git clone https://github.com/viktorkav/5-scripts.git
+cd 5-scripts\windows
+```
+
+Depois e so clicar duas vezes no `.bat` desejado, ou rodar pelo terminal:
+
+```powershell
+.\organizar-downloads.bat
+.\scanner-espaco.bat
+```
+
+> **Nota:** Os arquivos `.bat` ja cuidam das permissoes automaticamente.
+> Voce nao precisa alterar nenhuma configuracao do PowerShell.
 
 ### macOS
 
@@ -43,22 +81,15 @@ mkdir -p ~/bin
 for s in *.sh; do ln -sf "$PWD/$s" ~/bin/"${s%.sh}"; done
 ```
 
-### Windows (PowerShell)
-
-```powershell
-git clone https://github.com/viktorkav/5-scripts.git
-cd 5-scripts\windows
-
-# Se necessário, libere execução de scripts:
-# Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
 ## Uso
 
 ### organizar-downloads
 
 Organiza arquivos por extensao em subpastas categorizadas.
 
+**Windows (clique duplo):** Abra `organizar-downloads.bat` — organiza a pasta atual.
+
+**Terminal:**
 ```bash
 organizar-downloads              # organiza a pasta atual
 organizar-downloads ~/Downloads  # organiza ~/Downloads
@@ -70,6 +101,9 @@ Categorias: Imagens, Documentos, Videos, Audio, Instaladores, Compactados, Codig
 
 Mostra os maiores arquivos e pastas, com resumo de disco.
 
+**Windows (clique duplo):** Abra `scanner-espaco.bat` — escaneia sua pasta de usuario.
+
+**Terminal:**
 ```bash
 scanner-espaco            # escaneia a pasta atual
 scanner-espaco ~ 30       # top 30 em ~/
@@ -79,6 +113,9 @@ scanner-espaco ~ 30       # top 30 em ~/
 
 Encontra duplicatas por SHA-256. Nenhum arquivo e deletado.
 
+**Windows (clique duplo):** Abra `cacar-duplicatas.bat` — escaneia a pasta atual.
+
+**Terminal:**
 ```bash
 cacar-duplicatas                 # escaneia a pasta atual
 cacar-duplicatas ~/Fotos 4096    # minimo 4 KB
@@ -90,6 +127,9 @@ Pre-filtra por tamanho antes de calcular hashes — rapido mesmo em pastas grand
 
 Escaneia redes proximas e recomenda o canal menos congestionado.
 
+**Windows (clique duplo):** Abra `scanner-wifi.bat`.
+
+**Terminal:**
 ```bash
 scanner-wifi
 ```
@@ -100,6 +140,9 @@ Mostra SSID, canal, sinal, seguranca e mapa de congestionamento por canal (2.4 G
 
 Posiciona janelas automaticamente em multiplos monitores usando perfis.
 
+**Windows (clique duplo):** Abra `setup-workspace.bat` — abre o menu interativo.
+
+**Terminal:**
 ```bash
 setup-workspace              # menu interativo
 setup-workspace padrao       # carrega o perfil "padrao"
@@ -141,7 +184,12 @@ Posicoes: `left`, `right`, `full`, `top`, `bottom`, `top-left`, `top-right`, `bo
 │   ├── scanner-wifi.sh
 │   └── setup-workspace.sh
 ├── windows/                  # Windows (PowerShell)
-│   ├── organizar-downloads.ps1
+│   ├── organizar-downloads.bat   ← clique duplo pra rodar
+│   ├── scanner-espaco.bat
+│   ├── cacar-duplicatas.bat
+│   ├── scanner-wifi.bat
+│   ├── setup-workspace.bat
+│   ├── organizar-downloads.ps1   (scripts PowerShell)
 │   ├── scanner-espaco.ps1
 │   ├── cacar-duplicatas.ps1
 │   ├── scanner-wifi.ps1
@@ -149,6 +197,17 @@ Posicoes: `left`, `right`, `full`, `top`, `bottom`, `top-left`, `top-right`, `bo
 ├── LICENSE
 └── README.md
 ```
+
+## Problemas comuns
+
+**Windows: "O script nao abre" / "A janela fecha sozinha"**
+Use os arquivos `.bat` (nao os `.ps1`). Clique duplo no `.bat` e o script vai rodar corretamente.
+
+**Windows: "Nao tenho permissao para mover arquivos"**
+Isso pode acontecer com arquivos que tem nomes muito longos. O script `organizar-downloads` mostra quais arquivos falharam — voce pode renomea-los manualmente e rodar de novo.
+
+**Baixei os arquivos errados**
+Se voce esta no Windows, use apenas os arquivos da pasta `windows/`. Os arquivos `.sh` na raiz do projeto sao para macOS.
 
 ## Notas por plataforma
 
