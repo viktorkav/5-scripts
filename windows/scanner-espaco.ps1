@@ -7,7 +7,7 @@
     e pastas. Formata tamanhos em KB/MB/GB com cores para itens grandes.
     Mostra resumo de uso do disco.
 .PARAMETER Path
-    Caminho da pasta a escanear. Padrao: diretorio atual.
+    Caminho da pasta a escanear. Padrao: pasta do usuario.
 .PARAMETER Count
     Quantidade de itens a mostrar. Padrao: 20.
 .EXAMPLE
@@ -19,7 +19,7 @@
 #>
 
 param(
-    [string]$Path = ".",
+    [string]$Path = $env:USERPROFILE,
     [int]$Count = 20
 )
 
@@ -28,6 +28,7 @@ param(
 $Target = (Resolve-Path -Path $Path -ErrorAction SilentlyContinue).Path
 if (-not $Target -or -not (Test-Path -Path $Target -PathType Container)) {
     Write-Host "Erro: '$Path' nao e um diretorio valido." -ForegroundColor Red
+    Read-Host "  Pressione Enter para sair"
     exit 1
 }
 
@@ -162,3 +163,4 @@ if ($driveInfo) {
 }
 
 Write-Host ""
+Read-Host "  Pressione Enter para sair"

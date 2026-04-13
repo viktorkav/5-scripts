@@ -29,6 +29,7 @@ param(
 $Target = (Resolve-Path -Path $Path -ErrorAction SilentlyContinue).Path
 if (-not $Target -or -not (Test-Path -Path $Target -PathType Container)) {
     Write-Host "Erro: '$Path' nao e um diretorio valido." -ForegroundColor Red
+    Read-Host "  Pressione Enter para sair"
     exit 1
 }
 
@@ -95,6 +96,7 @@ Write-Host ""
 if ($totalFiles -eq 0) {
     Write-Host "  Nenhum arquivo encontrado." -ForegroundColor DarkGray
     Write-Host ""
+    Read-Host "  Pressione Enter para sair"
     exit 0
 }
 
@@ -115,6 +117,7 @@ if ($candidateCount -eq 0) {
     Write-Host ""
     Write-Host "  Nenhuma duplicata encontrada." -ForegroundColor Green
     Write-Host ""
+    Read-Host "  Pressione Enter para sair"
     exit 0
 }
 
@@ -157,6 +160,7 @@ $dupGroups = $hashResults | Group-Object -Property Hash | Where-Object { $_.Coun
 if ($dupGroups.Count -eq 0) {
     Write-Host "  Nenhuma duplicata encontrada." -ForegroundColor Green
     Write-Host ""
+    Read-Host "  Pressione Enter para sair"
     exit 0
 }
 
@@ -212,3 +216,4 @@ Write-Host "  -----------------------------------------------"
 Write-Host ""
 Write-Host "  Nenhum arquivo foi deletado. Revise a lista acima e delete manualmente." -ForegroundColor DarkGray
 Write-Host ""
+Read-Host "  Pressione Enter para sair"

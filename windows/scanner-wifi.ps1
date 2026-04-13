@@ -51,6 +51,7 @@ $networkOutput = netsh wlan show networks mode=bssid 2>$null
 if (-not $networkOutput) {
     Write-Host "  Nenhuma rede encontrada." -ForegroundColor Red
     Write-Host "  Verifique se o Wi-Fi esta ligado." -ForegroundColor DarkGray
+    Read-Host "  Pressione Enter para sair"
     exit 1
 }
 
@@ -87,6 +88,7 @@ foreach ($line in $networkOutput) {
 if ($networks.Count -eq 0) {
     Write-Host "  Nenhuma rede encontrada." -ForegroundColor Red
     Write-Host "  Verifique se o Wi-Fi esta ligado." -ForegroundColor DarkGray
+    Read-Host "  Pressione Enter para sair"
     exit 1
 }
 
@@ -255,3 +257,4 @@ Write-Host ""
 Write-Host "  Acesse o painel do roteador (geralmente 192.168.1.1)" -ForegroundColor DarkGray
 Write-Host "  e altere o canal nas configuracoes de Wi-Fi." -ForegroundColor DarkGray
 Write-Host ""
+Read-Host "  Pressione Enter para sair"

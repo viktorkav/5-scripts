@@ -1,6 +1,6 @@
 #!/bin/bash
 # scanner-espaco.sh — Mostra os maiores arquivos e pastas do disco
-# Uso: ./scanner-espaco.sh [pasta] [quantidade]   (padrão: ~  20)
+# Uso: ./scanner-espaco.sh [pasta] [quantidade]   (padrão: ~/  20)
 
 set -eo pipefail
 
@@ -10,7 +10,7 @@ BOLD='\033[1m'
 DIM='\033[0;90m'
 RESET='\033[0m'
 
-TARGET="${1:-.}"
+TARGET="${1:-$HOME}"
 TARGET="${TARGET%/}"
 COUNT="${2:-20}"
 

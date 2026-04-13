@@ -25,6 +25,7 @@ param(
 $Target = (Resolve-Path -Path $Path -ErrorAction SilentlyContinue).Path
 if (-not $Target -or -not (Test-Path -Path $Target -PathType Container)) {
     Write-Host "Erro: '$Path' nao e um diretorio valido." -ForegroundColor Red
+    Read-Host "  Pressione Enter para sair"
     exit 1
 }
 
@@ -148,3 +149,4 @@ else {
 }
 
 Write-Host ""
+Read-Host "  Pressione Enter para sair"

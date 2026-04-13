@@ -1,7 +1,7 @@
 #!/bin/bash
 # scanner-wifi.sh — Escaneia redes Wi-Fi e sugere o melhor canal
 # Uso: ./scanner-wifi.sh
-# macOS: usa o utilitário airport
+# macOS: usa system_profiler + ipconfig
 # Linux: usa nmcli
 
 set -eo pipefail
@@ -23,7 +23,7 @@ CHANNEL_COUNTS="$TMPDIR_WORK/channel_counts.txt"
 
 get_current_ssid() {
     if [[ "$OSTYPE" == darwin* ]]; then
-        networksetup -getairportnetwork en0 2>/dev/null | sed 's/Current Wi-Fi Network: //' || echo ""
+        ipconfig getsummary en0 2>/dev/null | awk -F' : ' '/^ *SSID/{print $2}'
     else
         nmcli -t -f active,ssid dev wifi 2>/dev/null | grep '^yes' | cut -d: -f2 || echo ""
     fi
@@ -31,12 +31,8 @@ get_current_ssid() {
 
 get_current_channel() {
     if [[ "$OSTYPE" == darwin* ]]; then
-        local airport="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-        if [ -x "$airport" ]; then
-            "$airport" -I 2>/dev/null | awk '/\bchannel:/{print $2}'
-        else
-            system_profiler SPAirPortDataType 2>/dev/null | awk '/Channel:/{print $2; exit}'
-        fi
+        # scutil expõe o canal via AirPort state
+        scutil <<< "show State:/Network/Interface/en0/AirPort" 2>/dev/null | awk '/CHANNEL/{print $3; exit}'
     else
         iwconfig 2>/dev/null | awk '/Channel/{gsub(/[^0-9]/,"",$2); print $2}'
     fi
@@ -46,31 +42,40 @@ get_current_channel() {
 
 scan_networks() {
     if [[ "$OSTYPE" == darwin* ]]; then
-        local airport="/System/Library/PrivateFrameworks/Apple80211.framework/Versions/Current/Resources/airport"
-        if [ -x "$airport" ]; then
-            "$airport" -s 2>/dev/null | tail -n +2 | while IFS= read -r line; do
-                # Extrair canal (após RSSI que é negativo)
-                # Formato: SSID  BSSID  RSSI  CHANNEL  HT  CC  SECURITY
-                channel=$(echo "$line" | awk '{
-                    for(i=1;i<=NF;i++) {
-                        if($i ~ /^-[0-9]+$/) { print $(i+1); exit }
-                    }
-                }')
-                ssid=$(echo "$line" | sed 's/^ *//' | awk '{
-                    match($0, /[0-9a-f]{2}(:[0-9a-f]{2}){5}/)
-                    if (RSTART > 0) print substr($0, 1, RSTART-1)
-                }' | sed 's/ *$//')
+        echo -e "  ${DIM}(isso pode levar alguns segundos)${RESET}"
+        local profiler_out
+        profiler_out=$(system_profiler SPAirPortDataType 2>/dev/null)
 
-                if [ -n "$channel" ] && [ -n "$ssid" ]; then
-                    # Canal primário (sem offset como ,+1)
-                    primary="${channel%%,*}"
-                    echo "${primary}|${ssid}" >> "$PARSED_FILE"
-                fi
-            done
-        else
-            echo "Erro: utilitário airport não encontrado." >&2
+        if [ -z "$profiler_out" ]; then
+            echo "Erro: não foi possível escanear redes Wi-Fi." >&2
             exit 1
         fi
+
+        # Formato do system_profiler:
+        #   Current Network Information:
+        #     NomeRede:
+        #       Channel: 36 (5GHz, 80MHz)
+        #   Other Local Wi-Fi Networks:
+        #     NomeRede:
+        #       Channel: 1 (2GHz, 20MHz)
+        echo "$profiler_out" | awk '
+            /Current Network Information:|Other Local Wi-Fi Networks:/ { capture=1; next }
+            capture && /^[^ ]/ { capture=0 }
+            capture && /^            [^ ].*:$/ {
+                ssid=$0
+                gsub(/^ +/, "", ssid)
+                gsub(/ *:$/, "", ssid)
+            }
+            capture && /Channel:/ {
+                ch=$0
+                gsub(/.*Channel: */, "", ch)
+                gsub(/ .*/, "", ch)
+                if (ssid != "" && ch != "") {
+                    print ch "|" ssid
+                    ssid=""
+                }
+            }
+        ' >> "$PARSED_FILE"
     elif command -v nmcli &>/dev/null; then
         nmcli -t -f SSID,CHAN dev wifi list 2>/dev/null | while IFS=: read -r ssid chan; do
             [ -n "$chan" ] && [ "$ssid" != "--" ] && echo "${chan}|${ssid}" >> "$PARSED_FILE"
@@ -109,6 +114,12 @@ current_channel=$(get_current_channel)
 
 > "$PARSED_FILE"
 scan_networks
+
+# Aviso sobre nomes ocultos no macOS
+if [[ "$OSTYPE" == darwin* ]] && grep -q "<redacted>" "$PARSED_FILE" 2>/dev/null; then
+    echo -e "  ${DIM}Nomes ocultos pelo macOS. Para ver os SSIDs, rode: sudo ./scanner-wifi.sh${RESET}"
+    echo ""
+fi
 
 if [ ! -s "$PARSED_FILE" ]; then
     echo -e "  ${RED}Nenhuma rede encontrada.${RESET}"
