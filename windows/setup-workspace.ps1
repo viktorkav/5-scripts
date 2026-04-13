@@ -639,11 +639,11 @@ function Start-Profile {
             }
         }
         else {
-            $pid = $existing[0].Id
+            $appProcessId = $existing[0].Id
             Write-Host "  " -NoNewline
             Write-Host ([char]0x2713) -NoNewline -ForegroundColor Green
             Write-Host " $app  " -NoNewline
-            Write-Host "(pid $pid)" -ForegroundColor DarkGray
+            Write-Host "(pid $appProcessId)" -ForegroundColor DarkGray
         }
     }
 
